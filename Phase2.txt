@@ -1,0 +1,172 @@
+/*
+* phase2.c
+*
+* Created: 16/03/2018 04:12:51 ã
+*  Author: Ahmed & Amr
+*/
+
+
+#include <avr/io.h>
+#include <stdio.h>
+#define F_CPU 1000000
+#include <util/delay.h>
+void segment1(char);
+void segment2(char);
+#define segDR1 DDRC
+#define segDR2 DDRD
+#define segport1 PORTC
+#define segport2 PORTD
+
+volatile uint8_t adcValue1;
+volatile uint8_t adcValue2; 
+
+void ADC_Init(){
+	DDRA = 0x00;	        /* Make ADC port as input */
+	ADCSRA = 0x87;          /* Enable ADC, with freq/128  */
+	ADMUX = 0x40;           /* Vref: Avcc, ADC channel: 0 */
+}
+
+int ADC_Read(char channel)
+{
+	ADMUX = 0x40 | (channel & 0x07);   /* set input channel to read */
+	ADCSRA |= (1<<ADSC);               /* Start ADC conversion */
+	while (!(ADCSRA & (1<<ADIF)));     /* Wait until end of conversion by polling ADC interrupt flag */
+	ADCSRA |= (1<<ADIF);               /* Clear interrupt flag */
+	_delay_ms(1);                      /* Wait a little bit */
+	return ADCW;                       /* Return ADC word */
+}
+int main(void)
+{
+	//MCUCSR=(1<<7);
+	MCUCSR=(1<<JTD);
+	MCUCSR=(1<<JTD);
+	segDR1=0x7f; //for 7 segment1
+	segDR2=0x7f; //for 7 segment1
+	char buffer[3];
+	
+/*	DDRA= 0x00;
+	ADCSRA |= (1 << ADEN);
+	ADCSRA|= (1 << ADPS0) | (1 << ADPS1);
+	ADMUX|= (1 << MUX0);
+	//ADMUX|= (0 << MUX0)| (0 << MUX1)| (0 << MUX2)| (1 << MUX3);
+	ADMUX|=(1<<REFS0);
+	//ADMUX|=(1<<REFS1);
+	ADMUX|=(1<<ADLAR);*/
+ADC_Init(); 
+	int x=0;
+	while(1)
+	{
+		x = (ADC_Read(0)*4.88);
+		 x = (x/10.00);
+
+		
+		/*ADCSRA|= (1 << ADSC);
+		while(ADCSRA & (1<<ADSC));
+		x = ADCL;
+		x |= ADCH ;*/
+		//float temp=x*2.56/1024;//temperature value;
+		//temp = temp *20/1024;
+		int tempi =(int) x;//int temperature value
+		
+		snprintf(buffer, 3, "%d", tempi);
+		segment1(buffer[0]);
+		segment2(buffer[1]);
+		
+	}
+}
+void segment1(char temp)
+{
+	if (temp=='0')
+	{
+		segport1=0x3f;
+	}
+	else if (temp=='1')
+	{
+		segport1=0x30;
+	}
+	else	if (temp=='2')
+	{
+		segport1=0x5B;
+	}
+	else if (temp=='3')
+	{
+		segport1=0x4f;
+	}
+	else if (temp=='4')
+	{
+		segport1=0x66;
+	}
+	else if (temp=='5')
+	{
+		segport1=0x6D;
+	}
+	else if (temp=='6')
+	{
+		segport1=0x7D;
+	}
+	else if (temp=='7')
+	{
+		segport1=0x07;
+	}
+	else if (temp=='8')
+	{
+		segport1=0x7f;
+	}
+	else if (temp=='9')
+	{
+		segport1=0x6f;
+	}
+	else
+	{
+		segport1=0x00;
+	}
+	
+	
+}
+void segment2(char temp)
+{
+	if (temp=='0')
+	{
+		segport2=0x3f;
+	}
+	else if (temp=='1')
+	{
+		segport2=0x30;
+	}
+	else	if (temp=='2')
+	{
+		segport2=0x5B;
+	}
+	else if (temp=='3')
+	{
+		segport2=0x4f;
+	}
+	else if (temp=='4')
+	{
+		segport2=0x66;
+	}
+	else if (temp=='5')
+	{
+		segport2=0x6D;
+	}
+	else if (temp=='6')
+	{
+		segport2=0x7D;
+	}
+	else if (temp=='7')
+	{
+		segport2=0x07;
+	}
+	else if (temp=='8')
+	{
+		segport2=0x7f;
+	}
+	else if (temp=='9')
+	{
+		segport2=0x6f;
+	}
+	else
+	{
+		segport2=0x00;
+	}
+}
